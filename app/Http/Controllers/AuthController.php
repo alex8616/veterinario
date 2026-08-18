@@ -30,8 +30,7 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
-
-        return redirect()->route('dashboard');
+        return view('cliente.PanelDeControlCliente');
     }
 
     public function showLogin()

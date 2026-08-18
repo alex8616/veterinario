@@ -1,5 +1,4 @@
 @extends('layouts.my-dashboard-layout')
 @section('content')
-<h1>holi</h1>
-
+<h1>cliente</h1>
 @endsection
