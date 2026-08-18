@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::resource('mascotas', MascotaController::class);
-
+    Route::get('/mascotas', [MascotaController::class, 'index'])->name('mascotas.index');
+    Route::get('/get-mascotas', [MascotaController::class, 'GetMascotas'])->name('mascotas.get');
+    Route::post('/crear-mascotas', [MascotaController::class, 'CrearMascota'])->name('mascotas.store');
 });

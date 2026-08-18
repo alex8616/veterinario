@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset('plainadmin/assets/css/materialdesignicons.min.css')}}" />
     <link rel="stylesheet" href="{{ asset('plainadmin/assets/css/fullcalendar.css')}}" />
     <link rel="stylesheet" href="{{ asset('plainadmin/assets/css/main.css')}}" />
+    <!-- Bootstrap -->
   </head>
   <body>
     <div id="preloader">
@@ -345,6 +346,6 @@
     <script src="{{ asset('plainadmin/assets/js/jvectormap.min.js') }}"></script>
     <script src="{{ asset('plainadmin/assets/js/world-merc.js') }}"></script>
     <script src="{{ asset('plainadmin/assets/js/polyfill.js') }}"></script>
-    <script src="{{ asset('plainadmin/assets/js/main.js') }}"></script>
+    <script src="{{ asset('plainadmin/assets/js/main.js') }}"></script>    
   </body>
 </html>
