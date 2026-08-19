@@ -309,7 +309,7 @@
           </div>
         </div>
       </header>
-      <section style="background: white; margin: 10px; height: 81vh;">
+      <section style="margin: 10px;">
         <div>
           @yield('content')    
         </div>

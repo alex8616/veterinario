@@ -58,4 +58,23 @@ class MascotaController extends Controller
             'mascota' => $mascota
         ], 201);
     }
+
+    public function GetMascota($id)
+{
+    $mascota = Mascota::where('id', $id)
+        ->where('user_id', auth()->id())
+        ->first();
+
+    if (!$mascota) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Mascota no encontrada.'
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'mascota' => $mascota
+    ]);
+}
 }
