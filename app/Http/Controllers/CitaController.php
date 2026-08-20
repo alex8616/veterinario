@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cita;
+use App\Mail\NuevaCitaMail;
+use Illuminate\Support\Facades\Mail;
 
 class CitaController extends Controller
 {
@@ -191,11 +193,44 @@ class CitaController extends Controller
             'estado' => 'pendiente',
             'observaciones' => $datos['observaciones'] ?? null,
         ]);
-        $cita->load('mascota');
+        $cita->load([
+            'mascota',
+            'veterinario',
+        ]);
+        Mail::to($cita->veterinario->email)->send(new NuevaCitaMail($cita));
+
         return response()->json([
             'success' => true,
             'message' => 'Cita registrada correctamente.',
             'cita' => $cita,
+        ]);
+    }
+
+    public function cancelar(Cita $cita)
+    {
+        $cita->load('mascota');
+
+        if ($cita->mascota->user_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permiso para cancelar esta cita.'
+            ],403);
+        }
+
+        if (!in_array($cita->estado,['pendiente','confirmada'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta cita no puede ser cancelada.'
+            ],422);
+        }
+
+        $cita->update([
+            'estado' => 'cancelada'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'La cita fue cancelada correctamente.'
         ]);
     }
 }

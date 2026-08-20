@@ -45,4 +45,11 @@ class Cita extends Model
     {
         return $this->hasOne(Consulta::class);
     }
+
+    protected function casts(): array
+    {
+        return [
+            'fecha' => 'date',
+        ];
+    }
 }

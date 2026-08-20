@@ -26,15 +26,24 @@
         background-color: #EBE3A7 !important;
     }
 </style>
+<div class="p-4 mb-5 rounded-4" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); box-shadow: 0 4px 20px rgba(74,108,247,0.10);">
+    <div class="d-flex flex-wrap align-items-center justify-content-between">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #1a2332;">
+                <i class="fas fa-user-circle me-2" style="color: #4a6cf7;"></i>Mi mascotas
+            </h2>
+            <p class="text-muted mb-0 fs-6">Gestiona informacion de tus mascotas</p>
+        </div>
+        <div class="mt-2 mt-sm-0">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill"  id="AddMascota">
+                <i class="fas fa-calendar-check me-1"></i> Agregar
+            </span>
+        </div>
+    </div>
+</div>
 <div class="row">
     <div class="col-lg-7">
         <div class="card-style mb-30">
-            <div class="title d-flex align-items-center justify-content-between mb-20" style="background: #EEEEEE; padding: 10px">
-                <div>Mascotas</div>
-                <button type="button" class="main-btn primary-btn btn-sm btn-hover py-1 px-2 text-xs" id="AddMascota">
-                    <i class="lni lni-plus"></i> Agregar
-                </button>
-            </div>
             <div class="table-wrapper table-responsive">
                 <table class="table" id="TableMascota">
                     <thead>

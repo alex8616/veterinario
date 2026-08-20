@@ -44,13 +44,5 @@ class Noticia extends Model
         return $this->hasMany(Like::class);
     }
 
-    public function comentarios(): HasMany
-    {
-        return $this->hasMany(Comentario::class);
-    }
 
-    public function likes(): HasMany
-    {
-        return $this->hasMany(Like::class);
-    }
 }

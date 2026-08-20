@@ -3,6 +3,7 @@
 @section('content')
 <link rel="stylesheet" href="https://cdn.lineicons.com/5.0/lineicons.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <style>
@@ -17,14 +18,20 @@
 <div class="row">
     <div class="col-lg-12">
         <div class="card-style mb-30">
-            <div class="title d-flex align-items-center justify-content-between mb-20">
-                <div>
-                    <h6 class="mb-5">Mis Citas</h6>
-                    <p class="text-sm text-gray mb-0">Consulta tus próximas citas veterinarias</p>
+            <div class="p-4 mb-5 rounded-4" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); box-shadow: 0 4px 20px rgba(74,108,247,0.10);">
+                <div class="d-flex flex-wrap align-items-center justify-content-between">
+                    <div>
+                        <h2 class="fw-bold mb-1" style="color: #1a2332;">
+                            <i class="fas fa-user-circle me-2" style="color: #4a6cf7;"></i>Mi citas
+                        </h2>
+                        <p class="text-muted mb-0 fs-6">Gestiona las citas para tus mascotas</p>
+                    </div>
+                    <div class="mt-2 mt-sm-0">
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill"  id="btnNuevaCita">
+                            <i class="fas fa-calendar-check me-1"></i> Agregar
+                        </span>
+                    </div>
                 </div>
-                <button type="button" class="main-btn primary-btn btn-sm btn-hover" id="btnNuevaCita">
-                    <i class="lni lni-plus"></i> Nueva cita
-                </button>
             </div>
 
             <div id="mensajeCitas"></div>
@@ -46,6 +53,7 @@
                             <th>Hora</th>
                             <th>Motivo</th>
                             <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="listaCitas"></tbody>
@@ -135,7 +143,7 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         cargarCitas();
@@ -207,6 +215,13 @@
                             <td>${formatearHora(cita.hora)}</td>
                             <td>${cita.motivo}</td>
                             <td>${estadoBadge}</td>
+                            <td>
+                                ${['pendiente','confirmada'].includes(cita.estado) ? `
+                                    <button type="button" class="btn btn-sm btn-danger btn-cancelar-cita" data-id="${cita.id}">
+                                        Cancelar
+                                    </button>
+                                ` : '—'}
+                            </td>
                         </tr>
                     `);
                 });
@@ -215,6 +230,73 @@
                 $('#loadingCitas').hide();
                 console.error(xhr);
                 $('#mensajeCitas').html(`<div class="alert alert-danger">Error al cargar las citas. Intente nuevamente.</div>`);
+            }
+        });
+    }
+
+    $(document).on('click','.btn-cancelar-cita',function(){
+        const citaId=$(this).data('id');
+
+        Swal.fire({
+            title:'¿Cancelar cita?',
+            text:'La cita será marcada como cancelada.',
+            icon:'warning',
+            showCancelButton:true,
+            confirmButtonText:'Sí, cancelar',
+            cancelButtonText:'No, mantener',
+            reverseButtons:true
+        }).then((result)=>{
+            if(result.isConfirmed){
+                cancelarCita(citaId);
+            }
+        });
+    });
+
+    function cancelarCita(citaId){
+        Swal.fire({
+            title:'Cancelando cita...',
+            allowOutsideClick:false,
+            allowEscapeKey:false,
+            showConfirmButton:false,
+            didOpen:()=>{
+                Swal.showLoading();
+            }
+        });
+
+        $.ajax({
+            url:`/citas/${citaId}/cancelar`,
+            type:'PATCH',
+            headers:{
+                'X-CSRF-TOKEN':$('meta[name="csrf-token"]').attr('content')
+            },
+            success:function(response){
+                Swal.close();
+                toastr.options={
+                    positionClass:'toast-bottom-right',
+                    closeButton:true,
+                    progressBar:true,
+                    timeOut:3000
+                };
+                toastr.success(response.message);
+                cargarCitas();
+            },
+            error:function(xhr){
+                Swal.close();
+
+                let mensaje='No fue posible cancelar la cita.';
+
+                if(xhr.responseJSON&&xhr.responseJSON.message){
+                    mensaje=xhr.responseJSON.message;
+                }
+
+                toastr.options={
+                    positionClass:'toast-bottom-right',
+                    closeButton:true,
+                    progressBar:true,
+                    timeOut:4000
+                };
+
+                toastr.error(mensaje);
             }
         });
     }

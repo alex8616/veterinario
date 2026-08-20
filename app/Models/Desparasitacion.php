@@ -10,7 +10,9 @@ class Desparasitacion extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+    protected $table='desparasitaciones';
+
+    protected $fillable=[
         'mascota_id',
         'veterinario_id',
         'producto',
@@ -19,24 +21,18 @@ class Desparasitacion extends Model
         'observaciones',
     ];
 
-    protected $casts = [
-        'fecha' => 'date',
-        'proxima_fecha' => 'date',
+    protected $casts=[
+        'fecha'=>'date',
+        'proxima_fecha'=>'date',
     ];
 
-    /**
-     * Mascota a la que pertenece la desparasitación.
-     */
     public function mascota(): BelongsTo
     {
         return $this->belongsTo(Mascota::class);
     }
 
-    /**
-     * Veterinario que realizó la desparasitación.
-     */
     public function veterinario(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'veterinario_id');
+        return $this->belongsTo(User::class,'veterinario_id');
     }
 }
