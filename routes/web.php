@@ -71,4 +71,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/noticias/{noticia}/comentarios',[NoticiaController::class,'comentarios'])->name('noticias.comentarios');
     Route::post('/noticias/{noticia}/comentarios',[NoticiaController::class,'guardarComentario'])->name('noticias.comentarios.guardar');
     Route::delete('/noticias/{noticia}/comentarios/{comentario}',[NoticiaController::class,'eliminarComentario'])->name('noticias.comentarios.eliminar');
+
+    //vetrinario
+    Route::get('/veterinario/citas',[CitaController::class,'citasVeterinario'])->name('veterinario.citas');
+    Route::get('/veterinario/citas/data',[CitaController::class,'citasVeterinarioData'])->name('veterinario.citas.data');
+    Route::get('/veterinario/citas/{cita}',[CitaController::class,'detalleCitaVeterinario'])->name('veterinario.citas.detalle');
+    Route::get('/veterinario/citas/{cita}/consulta', [CitaController::class, 'crearConsulta'])->name('veterinario.citas.consulta');
+    Route::post('/veterinario/citas/{cita}/consulta', [CitaController::class, 'guardarConsulta'])->name('veterinario.citas.consulta.guardar');
+    Route::get('/veterinario/citas/{cita}/consulta',[CitaController::class,'consulta'])->name('veterinario.citas.consulta');
+    Route::post('/veterinario/consultas/{consulta}/tratamiento',[CitaController::class,'guardarTratamiento'])->name('veterinario.consultas.tratamiento.guardar');
+    Route::get('/veterinario/consultas/{consulta}',[CitaController::class,'mostrarConsulta'])->name('veterinario.consultas.show');
+    Route::post('/veterinario/consultas/{consulta}/vacuna',[CitaController::class, 'guardarVacuna'])->name('veterinario.consultas.vacuna.guardar');
+    Route::get('/veterinario/mascotas/{mascota}/vacunas',[CitaController::class, 'vacunasMascota'])->name('veterinario.mascotas.vacunas');
+    Route::post('/veterinario/consultas/{consulta}/desparasitacion',[CitaController::class, 'guardarDesparasitacion'])->name('veterinario.consultas.desparasitacion.guardar');
+    Route::get('/veterinario/mascotas/{mascota}/desparasitaciones',[CitaController::class, 'desparasitacionesMascota'])->name('veterinario.mascotas.desparasitaciones');
+    Route::get('/veterinario/agenda',[CitaController::class,'citasVeterinarioAgenda'])->name('veterinario.agenda');
+    Route::get('/veterinario/agenda/{fecha}',[CitaController::class, 'citasVeterinarioFecha'])->name('veterinario.agenda.fecha');
+
 });

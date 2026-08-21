@@ -6,6 +6,11 @@ use Illuminate\Http\Request;
 use App\Models\Cita;
 use App\Mail\NuevaCitaMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use App\Models\Consulta;
+use App\Models\Vacuna;
+use App\Models\Mascota;
+use App\Models\Desparasitacion;
 
 class CitaController extends Controller
 {
@@ -231,6 +236,381 @@ class CitaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'La cita fue cancelada correctamente.'
+        ]);
+    }
+
+    public function citasVeterinario()
+    {
+        return view('veterinario.citas');
+    }
+
+    public function citasVeterinarioData()
+    {
+        $citas=Cita::where('veterinario_id',auth()->id())
+            ->with('mascota')
+            ->orderBy('fecha')
+            ->orderBy('hora')
+            ->get();
+
+        return response()->json([
+            'success'=>true,
+            'citas'=>$citas
+        ]);
+    }
+
+    public function detalleCitaVeterinario(Cita $cita)
+    {
+        if($cita->veterinario_id!==auth()->id()){
+            return response()->json([
+                'success'=>false,
+                'message'=>'No tienes permiso para consultar esta cita.'
+            ],403);
+        }
+
+        $cita->load([
+            'mascota',
+            'veterinario'
+        ]);
+
+        return response()->json([
+            'success'=>true,
+            'cita'=>$cita
+        ]);
+    }
+
+    public function iniciarConsulta(Cita $cita)
+    {
+        if($cita->veterinario_id!==auth()->id()){
+            return response()->json([
+                'success'=>false,
+                'message'=>'No tienes permiso para esta cita.'
+            ],403);
+        }
+
+        if($cita->estado==='cancelada'){
+            return response()->json([
+                'success'=>false,
+                'message'=>'No puedes iniciar una consulta para una cita cancelada.'
+            ],422);
+        }
+
+        if($cita->consulta){
+            return response()->json([
+                'success'=>false,
+                'message'=>'Esta cita ya tiene una consulta registrada.'
+            ],422);
+        }
+
+        $cita->load('mascota');
+
+        return response()->json([
+            'success'=>true,
+            'cita'=>$cita
+        ]);
+    }
+
+    public function crearConsulta(Cita $cita)
+    {
+        if($cita->veterinario_id!==auth()->id()){
+            return response()->json([
+                'success'=>false,
+                'message'=>'No tienes permiso para esta cita.'
+            ],403);
+        }
+
+        if($cita->estado==='cancelada'){
+            return response()->json([
+                'success'=>false,
+                'message'=>'No puedes iniciar una consulta para una cita cancelada.'
+            ],422);
+        }
+
+        if($cita->consulta){
+            return response()->json([
+                'success'=>false,
+                'message'=>'Esta cita ya tiene una consulta registrada.'
+            ],422);
+        }
+
+        $cita->load('mascota');
+
+        return response()->json([
+            'success'=>true,
+            'cita'=>$cita
+        ]);
+    }
+
+    public function guardarConsulta(Request $request,Cita $cita)
+    {
+        try{
+            if($cita->veterinario_id!==auth()->id()){
+                return response()->json([
+                    'success'=>false,
+                    'message'=>'No tienes permiso para esta cita.'
+                ],403);
+            }
+
+            if($cita->estado==='cancelada'){
+                return response()->json([
+                    'success'=>false,
+                    'message'=>'No puedes registrar una consulta para una cita cancelada.'
+                ],422);
+            }
+
+            if($cita->consulta){
+                return response()->json([
+                    'success'=>false,
+                    'message'=>'Esta cita ya tiene una consulta registrada.'
+                ],422);
+            }
+
+            $validated=$request->validate([
+                'mascota_id'=>'required|exists:mascotas,id',
+                'motivo'=>'required|string|max:255',
+                'diagnostico'=>'nullable|string',
+                'observaciones'=>'nullable|string',
+                'peso'=>'nullable|numeric|min:0',
+                'temperatura'=>'nullable|numeric|min:0',
+            ]);
+
+            if((int)$validated['mascota_id']!==(int)$cita->mascota_id){
+                return response()->json([
+                    'success'=>false,
+                    'message'=>'La mascota no corresponde a la cita.'
+                ],422);
+            }
+
+            DB::beginTransaction();
+
+            $consulta=Consulta::create([
+                'mascota_id'=>$cita->mascota_id,
+                'veterinario_id'=>$cita->veterinario_id,
+                'cita_id'=>$cita->id,
+                'fecha'=>now()->toDateString(),
+                'motivo'=>$validated['motivo'],
+                'diagnostico'=>$validated['diagnostico']??null,
+                'observaciones'=>$validated['observaciones']??null,
+                'peso'=>$validated['peso']??null,
+                'temperatura'=>$validated['temperatura']??null,
+            ]);
+
+            $cita->update([
+                'estado'=>'atendida',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success'=>true,
+                'message'=>'Consulta registrada correctamente.',
+                'consulta'=>$consulta,
+            ]);
+        }catch(\Throwable $e){
+            DB::rollBack();
+
+            return response()->json([
+                'success'=>false,
+                'message'=>$e->getMessage(),
+                'file'=>$e->getFile(),
+                'line'=>$e->getLine(),
+            ],500);
+        }
+    }
+
+    public function consulta(Cita $cita)
+    {
+        if($cita->veterinario_id!==auth()->id()){
+            return response()->json([
+                'success'=>false,
+                'message'=>'No tienes permiso para esta cita.'
+            ],403);
+        }
+
+        $cita->load([
+            'mascota',
+            'consulta.veterinario',
+            'consulta.tratamientos',
+        ]);
+
+        if(!$cita->consulta){
+            return response()->json([
+                'success'=>false,
+                'message'=>'Esta cita todavía no tiene una consulta registrada.'
+            ],404);
+        }
+
+        return response()->json([
+            'success'=>true,
+            'cita'=>$cita,
+            'consulta'=>$cita->consulta,
+        ]);
+    }
+
+    public function guardarTratamiento(Request $request, Consulta $consulta)
+    {
+        if($consulta->veterinario_id!==auth()->id()){
+            return response()->json([
+                'success'=>false,
+                'message'=>'No tienes permiso para registrar este tratamiento.'
+            ],403);
+        }
+
+        $request->validate([
+            'nombre'=>'required|string|max:255',
+            'descripcion'=>'nullable|string',
+            'fecha_inicio'=>'required|date',
+            'fecha_fin'=>'nullable|date|after_or_equal:fecha_inicio',
+            'estado'=>'required|string|max:50',
+            'observaciones'=>'nullable|string',
+        ]);
+
+        $tratamiento=$consulta->tratamientos()->create([
+            'mascota_id'=>$consulta->mascota_id,
+            'veterinario_id'=>$consulta->veterinario_id,
+            'nombre'=>$request->nombre,
+            'descripcion'=>$request->descripcion,
+            'fecha_inicio'=>$request->fecha_inicio,
+            'fecha_fin'=>$request->fecha_fin,
+            'estado'=>$request->estado,
+            'observaciones'=>$request->observaciones,
+        ]);
+
+        return response()->json([
+            'success'=>true,
+            'message'=>'Tratamiento registrado correctamente.',
+            'tratamiento'=>$tratamiento,
+        ]);
+    }
+
+    public function mostrarConsulta(Consulta $consulta)
+    {
+        if($consulta->veterinario_id!==auth()->id()){
+            return response()->json([
+                'success'=>false,
+                'message'=>'No tienes permiso para consultar esta información.'
+            ],403);
+        }
+
+        $consulta->load([
+            'mascota',
+            'veterinario',
+            'tratamientos',
+        ]);
+
+        return response()->json([
+            'success'=>true,
+            'consulta'=>$consulta,
+        ]);
+    }
+
+    public function guardarVacuna(Request $request, Consulta $consulta)
+    {
+        if ($consulta->veterinario_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permiso para registrar esta vacuna.'
+            ], 403);
+        }
+
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'fecha_aplicacion' => 'required|date',
+            'proxima_dosis' => 'nullable|date|after_or_equal:fecha_aplicacion',
+            'observaciones' => 'nullable|string',
+        ]);
+
+        $vacuna = Vacuna::create([
+            'mascota_id' => $consulta->mascota_id,
+            'veterinario_id' => $consulta->veterinario_id,
+            'nombre' => $request->nombre,
+            'fecha_aplicacion' => $request->fecha_aplicacion,
+            'proxima_dosis' => $request->proxima_dosis,
+            'observaciones' => $request->observaciones,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vacuna registrada correctamente.',
+            'vacuna' => $vacuna->load('veterinario'),
+        ]);
+    }
+
+    public function vacunasMascota(Mascota $mascota)
+    {
+        $vacunas = $mascota->vacunas()
+            ->with('veterinario')
+            ->orderByDesc('fecha_aplicacion')
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'vacunas' => $vacunas,
+        ]);
+    }
+
+    public function guardarDesparasitacion(Request $request, Consulta $consulta)
+    {
+        if ($consulta->veterinario_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permiso para registrar esta desparasitación.'
+            ], 403);
+        }
+
+        $request->validate([
+            'producto' => 'required|string|max:255',
+            'fecha' => 'required|date',
+            'proxima_fecha' => 'nullable|date|after_or_equal:fecha',
+            'observaciones' => 'nullable|string',
+        ]);
+
+        $desparasitacion = Desparasitacion::create([
+            'mascota_id' => $consulta->mascota_id,
+            'veterinario_id' => $consulta->veterinario_id,
+            'producto' => $request->producto,
+            'fecha' => $request->fecha,
+            'proxima_fecha' => $request->proxima_fecha,
+            'observaciones' => $request->observaciones,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Desparasitación registrada correctamente.',
+            'desparasitacion' => $desparasitacion->load('veterinario'),
+        ]);
+    }
+
+    public function desparasitacionesMascota(Mascota $mascota)
+    {
+        $desparasitaciones = $mascota->desparasitaciones()
+            ->with('veterinario')
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'desparasitaciones' => $desparasitaciones,
+        ]);
+    }
+
+    public function citasVeterinarioAgenda()
+    {
+        return view('veterinario.agenda');
+    }
+
+    public function citasVeterinarioFecha($fecha)
+    {
+        $citas = Cita::where('veterinario_id', auth()->id())
+            ->whereDate('fecha', $fecha)
+            ->with('mascota')
+            ->orderBy('hora')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'citas' => $citas,
         ]);
     }
 }

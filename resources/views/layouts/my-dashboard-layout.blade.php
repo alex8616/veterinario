@@ -371,8 +371,8 @@
                             <span class="text">Veterinaria</span>
                         </a>
                         <ul id="menuVeterinaria" class="collapse dropdown-nav show">
-                            <li><a href="#">Citas</a></li>
-                            <li><a href="#">Consultas</a></li>
+                            <li><a href="{{ route('veterinario.agenda') }}">Citas</a></li>
+                            <li><a href="{{ route('veterinario.citas') }}">Consultas</a></li>
                             <li><a href="#">Historia clínica</a></li>
                             <li><a href="#">Vacunas</a></li>
                             <li><a href="#">Desparasitaciones</a></li>
