@@ -345,23 +345,30 @@
             <ul>
                 @if(auth()->user()->role === 'admin')
                     <li class="nav-item nav-item-has-children">
-                        <a href="#0" 
-                           data-bs-toggle="collapse" 
-                           data-bs-target="#menuGestion" 
-                           aria-expanded="true">
-                            <span class="icon"><i class="lni lni-users"></i></span>
+                        <a href="#0" data-bs-toggle="collapse" data-bs-target="#menuGestion" aria-expanded="true">
+                            <span class="icon">
+                                <i class="lni lni-users"></i>
+                            </span>
                             <span class="text">Gestión</span>
                         </a>
                         <ul id="menuGestion" class="collapse dropdown-nav show">
-                            <li><a href="#">Clientes</a></li>
-                            <li><a href="#">Veterinarios</a></li>
-                            <li><a href="#">Usuarios</a></li>
-                            <li><a href="#">Mascotas</a></li>
+                            <li>
+                                <a href="{{ route('admin.clientes') }}">Clientes</a>
+                            </li>
+                            <li>
+                                <a href="#">Veterinarios</a>
+                            </li>
+                            <li>
+                                <a href="#">Usuarios</a>
+                            </li>
+                            <li>
+                                <a href="#">Mascotas</a>
+                            </li>
                         </ul>
                     </li>
                 @endif
 
-                @if(auth()->user()->role === 'veterinario' || auth()->user()->role === 'admin')
+                @if(auth()->user()->role === 'veterinario')
                     <li class="nav-item nav-item-has-children">
                         <a href="#0" 
                            data-bs-toggle="collapse" 
@@ -373,10 +380,7 @@
                         <ul id="menuVeterinaria" class="collapse dropdown-nav show">
                             <li><a href="{{ route('veterinario.agenda') }}">Citas</a></li>
                             <li><a href="{{ route('veterinario.citas') }}">Consultas</a></li>
-                            <li><a href="#">Historia clínica</a></li>
-                            <li><a href="#">Vacunas</a></li>
-                            <li><a href="#">Desparasitaciones</a></li>
-                            <li><a href="#">Tratamientos</a></li>
+                            <li><a href="{{ route('veterinario.historia') }}">Historia clínica</a></li>
                         </ul>
                     </li>
                 @endif

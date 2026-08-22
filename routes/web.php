@@ -7,6 +7,7 @@ use App\Http\Controllers\CitaController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\HistoriaClinicaController;
 use App\Http\Controllers\NoticiaController;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -87,5 +88,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/veterinario/mascotas/{mascota}/desparasitaciones',[CitaController::class, 'desparasitacionesMascota'])->name('veterinario.mascotas.desparasitaciones');
     Route::get('/veterinario/agenda',[CitaController::class,'citasVeterinarioAgenda'])->name('veterinario.agenda');
     Route::get('/veterinario/agenda/{fecha}',[CitaController::class, 'citasVeterinarioFecha'])->name('veterinario.agenda.fecha');
+    Route::get('/veterinario/historia-clinica',[CitaController::class, 'historiaClinica'])->name('veterinario.historia');
+    Route::get('/veterinario/historia-clinica/clientes',[CitaController::class, 'clientesHistoriaClinica'])->name('veterinario.historia.clientes');
+    Route::get('/veterinario/historia-clinica/{mascota}/pdf',[CitaController::class, 'exportarHistoriaClinicaPDF'])->name('veterinario.historia.pdf');
+    Route::get('/veterinario/historia-clinica/cliente/{cliente}',[CitaController::class, 'historiaClinicaCliente'])->name('veterinario.historia.cliente');
+    Route::get('/veterinario/historia-clinica/{mascota}',[CitaController::class, 'historiaClinicaMascota'])->name('veterinario.historia.mascota');
+    Route::get('/veterinario/historia-clinica/cliente/{cliente}/pdf',[CitaController::class, 'historiaClinicaClientePdf'])->name('veterinario.historia.cliente.pdf');
 
+    //admin-cliente
+    Route::get('/admin/clientes',[AdminController::class,'clientes'])->name('admin.clientes');
+    Route::get('/admin/clientes/data',[AdminController::class,'clientesData'])->name('admin.clientes.data');
+    Route::post('/admin/usuarios',[AdminController::class,'guardarUsuario'])->name('admin.usuarios.guardar');
 });

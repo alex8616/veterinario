@@ -11,6 +11,8 @@ use App\Models\Consulta;
 use App\Models\Vacuna;
 use App\Models\Mascota;
 use App\Models\Desparasitacion;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CitaController extends Controller
 {
@@ -612,5 +614,201 @@ class CitaController extends Controller
             'success' => true,
             'citas' => $citas,
         ]);
+    }
+
+    public function historiaClinica()
+    {
+        return view('veterinario.historia-clinica');
+    }
+
+    public function historiaClinicaMascota(Mascota $mascota)
+    {
+        $mascota->load([
+            'user',
+
+            'consultas' => function ($query) {
+                $query->with('veterinario')
+                    ->orderByDesc('fecha')
+                    ->orderByDesc('id');
+            },
+
+            'vacunas' => function ($query) {
+                $query->with('veterinario')
+                    ->orderByDesc('fecha_aplicacion')
+                    ->orderByDesc('id');
+            },
+
+            'desparasitaciones' => function ($query) {
+                $query->with('veterinario')
+                    ->orderByDesc('fecha')
+                    ->orderByDesc('id');
+            },
+
+            'tratamientos' => function ($query) {
+                $query->with('veterinario')
+                    ->orderByDesc('fecha_inicio')
+                    ->orderByDesc('id');
+            },
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'mascota' => $mascota,
+        ]);
+    }
+
+    public function clientesHistoriaClinica(Request $request)
+    {
+        $buscar = $request->input('buscar');
+
+        $clientes = User::where('role', 'cliente')
+            ->when($buscar, function ($query) use ($buscar) {
+                $query->where(function ($q) use ($buscar) {
+                    $q->where('name', 'like', "%{$buscar}%")
+                    ->orWhere('email', 'like', "%{$buscar}%");
+                });
+            })
+            ->with([
+                'mascotas' => function ($query) {
+                    $query->orderBy('nombre');
+                }
+            ])
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'clientes' => $clientes,
+        ]);
+    }
+
+    public function exportarHistoriaClinicaPDF(Mascota $mascota)
+    {
+        $mascota->load([
+            'user',
+
+            'consultas' => function ($query) {
+                $query->with('veterinario')
+                    ->orderByDesc('fecha')
+                    ->orderByDesc('id');
+            },
+
+            'vacunas' => function ($query) {
+                $query->with('veterinario')
+                    ->orderByDesc('fecha_aplicacion')
+                    ->orderByDesc('id');
+            },
+
+            'desparasitaciones' => function ($query) {
+                $query->with('veterinario')
+                    ->orderByDesc('fecha')
+                    ->orderByDesc('id');
+            },
+
+            'tratamientos' => function ($query) {
+                $query->with('veterinario')
+                    ->orderByDesc('fecha_inicio')
+                    ->orderByDesc('id');
+            },
+        ]);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'veterinario.pdf.historia-clinica',
+            compact('mascota')
+        );
+
+        return $pdf->stream(
+            'historia-clinica-' . $mascota->nombre . '.pdf'
+        );
+    }
+
+    public function historiaClinicaCliente(User $cliente)
+    {
+        $cliente->load([
+            'mascotas' => function ($query) {
+
+                $query->orderBy('nombre');
+
+                $query->with([
+                    'consultas' => function ($query) {
+                        $query->with('veterinario')
+                            ->orderByDesc('fecha')
+                            ->orderByDesc('id');
+                    },
+
+                    'vacunas' => function ($query) {
+                        $query->with('veterinario')
+                            ->orderByDesc('fecha_aplicacion')
+                            ->orderByDesc('id');
+                    },
+
+                    'desparasitaciones' => function ($query) {
+                        $query->with('veterinario')
+                            ->orderByDesc('fecha')
+                            ->orderByDesc('id');
+                    },
+
+                    'tratamientos' => function ($query) {
+                        $query->with('veterinario')
+                            ->orderByDesc('fecha_inicio')
+                            ->orderByDesc('id');
+                    },
+                ]);
+            }
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'cliente' => $cliente,
+        ]);
+    }
+
+    public function historiaClinicaClientePdf(User $cliente)
+    {
+        $cliente->load([
+            'mascotas' => function ($query) {
+
+                $query->orderBy('nombre');
+
+                $query->with([
+                    'consultas' => function ($query) {
+                        $query->with('veterinario')
+                            ->orderByDesc('fecha')
+                            ->orderByDesc('id');
+                    },
+
+                    'vacunas' => function ($query) {
+                        $query->with('veterinario')
+                            ->orderByDesc('fecha_aplicacion')
+                            ->orderByDesc('id');
+                    },
+
+                    'desparasitaciones' => function ($query) {
+                        $query->with('veterinario')
+                            ->orderByDesc('fecha')
+                            ->orderByDesc('id');
+                    },
+
+                    'tratamientos' => function ($query) {
+                        $query->with('veterinario')
+                            ->orderByDesc('fecha_inicio')
+                            ->orderByDesc('id');
+                    },
+                ]);
+            }
+        ]);
+
+        $pdf = Pdf::loadView(
+            'veterinario.pdf.historia-clinica-cliente',
+            compact('cliente')
+        );
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->stream(
+            'historial-clinico-' .
+            \Illuminate\Support\Str::slug($cliente->name) .
+            '.pdf'
+        );
     }
 }
